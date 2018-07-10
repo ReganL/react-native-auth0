@@ -38,7 +38,7 @@ react-native link react-native-auth0
 
 #### Android
 
-In the file `android/src/app/AndroidManifest.xml` you must make sure the main activity of the app has launch mode value of `singleTask` and that it has the following intent filter
+In the file `android/app/src/main/AndroidManifest.xml` you must make sure the **MainActivity** of the app has a **launchMode** value of `singleTask` and that it has the following intent filter:
 
 ```xml
 <intent-filter>
@@ -52,7 +52,7 @@ In the file `android/src/app/AndroidManifest.xml` you must make sure the main ac
 </intent-filter>
 ```
 
-So if you have `samples.auth0.com` as your Auth0 domain you would have the following activity configuration:
+So if you have `samples.auth0.com` as your Auth0 domain you would have the following **MainActivity**  configuration:
 
 ```xml
 <activity
@@ -79,6 +79,9 @@ android:windowSoftInputMode="adjustResize">
 
 > For more info please read [react native docs](https://facebook.github.io/react-native/docs/linking.html)
 
+
+In order to reduce the potential for conflict which may be caused by the presence of differing versions of the Android support libraries, you may wish to [configure project-wide properties](https://developer.android.com/studio/build/gradle-tips.html#configure-project-wide-properties). Setting the Compile and Target SDK versions, Build Tools version, and Support Library version in your **root project's** `build.gradle` file will make `react-native-auth0` and many other React Native modules use them.
+
 #### iOS
 
 Inside the `ios` folder find the file `AppDelegate.[swift|m]` add the following to it
@@ -94,7 +97,7 @@ Inside the `ios` folder find the file `AppDelegate.[swift|m]` add the following 
 }
 ```
 
-Then in your `Info.plist` file, find the value of the entry of `CFBundleIdentifier`, e.g.
+Inside the `ios` folder open the `Info.plist` and locate the value for `CFBundleIdentifier`, e.g.
 
 ```xml
 <key>CFBundleIdentifier</key>
@@ -119,9 +122,32 @@ and then register a URL type entry using the value of `CFBundleIdentifier` as th
 </array>
 ```
 
-> The value `org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)` is the default for apps created with RN cli, you will probably have a different value.
+The `<string>` value should be the literal value of the Bundle Identifier with no $ variables, for example: `samples.auth0.com`.
+
+> The value `org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)` is the default for apps created with React Native CLI, you may have a different value.
 
 > For more info please read [react native docs](https://facebook.github.io/react-native/docs/linking.html)
+
+### Callback URL(s)
+
+Callback URLs are the URLs that Auth0 invokes after the authentication process. Auth0 routes your application back to this URL and appends additional parameters to it, including a token. Since callback URLs can be manipulated, you will need to add this URL to your Application's **Allowed Callback URLs** for security. This will enable Auth0 to recognize these URLs as valid. If omitted, authentication will not be successful.
+
+> Callback URLs must have a valid scheme value as defined by the [specification](https://tools.ietf.org/html/rfc3986#page-17). A "Redirect URI is not valid" error will raise if this format is not respected.
+
+
+Go to the [Auth0 Dashboard](https://manage.auth0.com/#/applications), select your application and make sure that **Allowed Callback URLs** contains the following:
+
+#### iOS
+sq
+```text
+{YOUR_BUNDLE_IDENTIFIER}://${YOUR_AUTH0_DOMAIN}/ios/{YOUR_BUNDLE_IDENTIFIER}/callback
+```
+
+#### Android
+
+```text
+{YOUR_APP_PACKAGE_NAME}://{YOUR_AUTH0_DOMAIN}/android/{YOUR_APP_PACKAGE_NAME}/callback
+```
 
 ## Usage
 
@@ -141,9 +167,14 @@ auth0
     .catch(error => console.log(error));
 ```
 
-> This snippet sets the `audience` to ensure OIDC compliant responses, this can also be achieved by enabling the **OIDC Conformant** switch in your Auth0 dashboard under `Client / Settings / Advanced OAuth`. For more information please check [this documentation](https://auth0.com/docs/api-auth/intro#how-to-use-the-new-flows).
+> This snippet sets the `audience` to ensure OIDC compliant responses, this can also be achieved by enabling the **OIDC Conformant** switch in your Auth0 dashboard under `Application / Settings / Advanced OAuth`. For more information please check [this documentation](https://auth0.com/docs/api-auth/intro#how-to-use-the-new-flows).
 
 ### Authentication API
+
+### Important: Database Connection Authentication
+
+Since June 2017 new Clients no longer have the **Password Grant Type*** enabled by default.
+If you are accessing a Database Connection using `passwordRealm` then you will need to enable the Password Grant Type, please follow [this guide](https://auth0.com/docs/clients/client-grant-types#how-to-edit-the-client-grant_types-property).
 
 #### Login with Password Realm Grant
 

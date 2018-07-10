@@ -35,11 +35,15 @@ export default class WebAuth {
    *
    * In iOS it will use `SFSafariViewController` and in Android Chrome Custom Tabs.
    *
+   * To learn more about how to customize the authorize call, check the Universal Login Page
+   * article at https://auth0.com/docs/hosted-pages/login
+   *
    * @param {Object} parameters parameters to send
    * @param {String} [parameters.state] random string to prevent CSRF attacks and used to discard unexepcted results. By default its a cryptographically secure random.
    * @param {String} [parameters.nonce] random string to prevent replay attacks of id_tokens.
    * @param {String} [parameters.audience] identifier of Resource Server (RS) to be included as audience (aud claim) of the issued access token
    * @param {String} [parameters.scope] scopes requested for the issued tokens. e.g. `openid profile`
+   * @param {String} [parameters.connection] The name of the identity provider to use, e.g. "google-oauth2" or "facebook". When not set, it will display Auth0's Universal Login Page.
    * @returns {Promise}
    * @see https://auth0.com/docs/api/authentication#authorize-client
    *
@@ -95,5 +99,32 @@ export default class WebAuth {
             return client.exchange({code, verifier, redirectUri})
           });
       });
+  }
+
+  /**
+   *  Removes Auth0 session and optionally remove the Identity Provider session.
+   *  In iOS it will use `SFSafariViewController`
+   *
+   * @param {Object} parameters parameters to send
+   * @param {Bool} [parameters.federated] Optionally remove the IdP session.
+   * @returns {Promise}
+   * @see https://auth0.com/docs/logout
+   *
+   * @memberof WebAuth
+   */
+  clearSession(options = {}) {
+    if (Platform.OS !== 'ios') {
+      return Promise.reject(new AuthError({
+        json: {
+          error: 'a0.platform.not_available',
+          error_description: `Cannot perform operation in platform ${Platform.OS}`
+        },
+        status: 0
+      }));
+    }
+    const { client, agent } = this;
+    const federated = options.federated || false;
+    const logoutUrl = client.logoutUrl(options);
+    return agent.show(logoutUrl, true);
   }
 }
